@@ -1,127 +1,80 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Listado de Árboles</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <head>
+        <title>Listado de Árboles</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <style>
-        .album {
-            padding: 50px 0;
-        }
-        .card-img-top {
-            height: 200px;
-            object-fit: cover;
-        }
-    </style>
-</head>
-<body>
-    <header th:replace="layout/plantilla :: head"></header>
+        <style>
+            .album {
+                padding: 50px 0;
+            }
+            .card-img-top {
+                height: 200px;
+                object-fit: cover;
+            }
+        </style>
+    </head>
+    <body>
+        <header th:replace="layout/plantilla :: head"></header>
 
-    <!-- Contenedor principal -->
-    <div class="container album">
-        <div class="text-center mb-4">
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalFormulario" 
-                    onclick="abrirFormulario('', '', '')">
-                Agregar Nuevo Árbol
-            </button>
-        </div>
+        <!-- Contenedor principal -->
+        <div class="container album">
+            <div class="text-center mb-4">
+                <a class="btn btn-success" th:href="@{/crear-arbol}">Agregar Nuevo Árbol</a>
+            </div>
 
-        <!-- Galería de Árboles -->
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col" th:each="arbol : ${arboles}">
-                <div class="card shadow-sm">
-                    <img src="https://i0.wp.com/wokii.com/wp-content/uploads/2021/11/shutterstock-80925343.jpg?fit=1280%2C720&ssl=1"
-                         class="card-img-top" alt="Imagen del Árbol">
-                    <div class="card-body text-center">
-                        <h5 class="card-title" th:text="${arbol.nombreComun}"></h5>
-                        <p class="card-text text-muted" th:text="${arbol.nombreCientifico}"></p>
-                        <div class="d-flex justify-content-center">
-                            <!-- Botón de Modificar -->
-                            <button class="btn btn-warning btn-sm mx-2" data-bs-toggle="modal" data-bs-target="#modalFormulario"
-                                    th:attr="onclick=|abrirFormulario('${arbol.idArbol}', '${arbol.nombreComun}', '${arbol.nombreCientifico}')|">
-                                Modificar
-                            </button>
-                            <!-- Botón de Eliminar -->
-                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalEliminar"
-                                    th:attr="onclick=|prepararEliminar('${arbol.idArbol}', '${arbol.nombreComun}')|">
-                                Eliminar
-                            </button>
+            <!-- Galería de Árboles -->
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col" th:each="arbol : ${arboles}">
+                    <div class="card shadow-sm">
+                        <img src="https://i0.wp.com/wokii.com/wp-content/uploads/2021/11/shutterstock-80925343.jpg?fit=1280%2C720&ssl=1"
+                             class="card-img-top" alt="Imagen del Árbol">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" th:text="${arbol.nombreComun}"></h5>
+                            <p class="card-text text-muted" th:text="${arbol.nombreCientifico}"></p>
+                            <div class="d-flex justify-content-center">
+                                <!-- Botón de Modificar -->
+                                <a class="btn btn-warning btn-sm mx-2" th:href="@{/modificar-arbol(id=${arbol.idArbol})}">
+                                    Modificar
+                                </a>
+
+                                <!-- Botón de Eliminar -->
+                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" th:data-bs-target="'#modalEliminar' + ${arbol.idArbol}">
+                                    Eliminar
+                                </button>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Modal de Confirmación para Eliminar (Único para cada Árbol) -->
+                    <div class="modal fade" th:id="'modalEliminar' + ${arbol.idArbol}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p th:text="'¿Está seguro de que desea eliminar el árbol ' + ${arbol.nombreComun} + '?'"></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <a class="btn btn-danger" th:href="@{/eliminar/{id}(id=${arbol.idArbol})}">Eliminar</a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal para Agregar/Modificar Árbol -->
-    <div class="modal fade" id="modalFormulario" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">Agregar / Modificar Árbol</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formArbol" th:action="@{/guardar}" method="post">
-                        <input type="hidden" id="idArbol" name="idArbol">
-                        <div class="mb-3">
-                            <label class="form-label">Nombre Común</label>
-                            <input type="text" class="form-control" id="nombreComun" name="nombreComun" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nombre Científico</label>
-                            <input type="text" class="form-control" id="nombreCientifico" name="nombreCientifico" required>
-                        </div>
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-success">Guardar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+        <footer th:replace="layout/plantilla :: footer"></footer>
 
-    <!-- Modal de Confirmación para Eliminar -->
-    <div class="modal fade" id="modalEliminar" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">Confirmar Eliminación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>¿Está seguro de que desea eliminar el árbol <strong id="nombreArbolEliminar"></strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <a id="confirmarEliminar" class="btn btn-danger">Eliminar</a>
-                </div>
-            </div>
-        </div>
-    </div>
+        <!-- Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <footer th:replace="layout/plantilla :: footer"></footer>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // Función para abrir el formulario de agregar/modificar
-        function abrirFormulario(id, nombre, cientifico) {
-            document.getElementById("idArbol").value = id || "";
-            document.getElementById("nombreComun").value = nombre || "";
-            document.getElementById("nombreCientifico").value = cientifico || "";
-            document.querySelector(".modal-title").textContent = id ? "Modificar Árbol" : "Agregar Nuevo Árbol";
-        }
-
-        // Función para preparar la eliminación
-        function prepararEliminar(id, nombre) {
-            document.getElementById("nombreArbolEliminar").textContent = nombre;
-            document.getElementById("confirmarEliminar").href = "/eliminar/" + id;
-        }
-    </script>
-</body>
+    </body>
 </html>
-
